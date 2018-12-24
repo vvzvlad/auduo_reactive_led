@@ -4,6 +4,7 @@ from __future__ import division
 import platform
 import numpy as np
 import config
+import json
 
 # ESP8266 uses WiFi communication
 if config.DEVICE == 'esp8266':
@@ -46,26 +47,32 @@ def _update_esp8266():
     global pixels, _prev_pixels
     # Truncate values and cast to integer
     pixels = np.clip(pixels, 0, 255).astype(int)
+    #print(pixels)
     # Optionally apply gamma correc tio
     p = _gamma[pixels] if config.SOFTWARE_GAMMA_CORRECTION else np.copy(pixels)
+    p = np.clip(p, 0, 255).astype(int)
     MAX_PIXELS_PER_PACKET = 126
     # Pixel indices
     idx = range(pixels.shape[1])
+    #print(idx)
     idx = [i for i in idx if not np.array_equal(p[:, i], _prev_pixels[:, i])]
     n_packets = len(idx) // MAX_PIXELS_PER_PACKET + 1
     idx = np.array_split(idx, n_packets)
+    #print(idx)
     for packet_indices in idx:
+        all_data = []
         m = '' if _is_python_2 else []
         for i in packet_indices:
             if _is_python_2:
-                m += chr(i) + chr(p[0][i]) + chr(p[1][i]) + chr(p[2][i])
+                all_data.append({'i': i, 'r': p[0][i], 'g': p[1][i], 'b': p[2][i]})
             else:
                 m.append(i)  # Index of pixel to change
                 m.append(p[0][i])  # Pixel red value
                 m.append(p[1][i])  # Pixel green value
                 m.append(p[2][i])  # Pixel blue value
-        m = m if _is_python_2 else bytes(m)
-        _sock.sendto(m, (config.UDP_IP, config.UDP_PORT))
+        #print(all_data)
+        data_json = json.dumps(all_data)
+        _sock.sendto(data_json, (config.UDP_IP, config.UDP_PORT))
     _prev_pixels = np.copy(p)
 
 
