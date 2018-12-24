@@ -112,11 +112,17 @@ if __name__ == '__main__':
     import time
     # Turn all pixels off
     pixels *= 0
-    pixels[0, 0] = 255  # Set 1st pixel red
-    pixels[1, 1] = 255  # Set 2nd pixel green
-    pixels[2, 2] = 255  # Set 3rd pixel blue
-    print('Starting LED strand test')
+
+    for i_2 in xrange(0,5):
+        for i in xrange(0,3):
+            pixels[i, i_2] = 255
+
+    for i_2 in xrange(20,25):
+        for i in xrange(0,3):
+            pixels[i, i_2] = 255
+
+    print('Starting LED effects')
     while True:
         pixels = np.roll(pixels, 1, axis=1)
         update()
-        time.sleep(.1)
+        time.sleep(.05)
